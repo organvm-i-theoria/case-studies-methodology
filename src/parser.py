@@ -47,7 +47,7 @@ def parse_frontmatter(text: str) -> tuple[dict[str, str], str]:
     metadata: dict[str, str] = {}
     lines = text.splitlines()
 
-    if lines and lines[0] == "---":
+    if lines and lines[0].strip() == "---":
         for i in range(1, len(lines)):
             if lines[i].strip() == "---":
                 for line in lines[1:i]:
