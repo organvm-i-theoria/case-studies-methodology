@@ -27,18 +27,52 @@ class TestParseFrontmatter:
         """Frontmatter without closing --- should return text as-is."""
         text = "---\ntitle: Test\nNo closing delimiter."
         metadata, body = parse_frontmatter(text)
-        # With only one ---, split produces < 3 parts, so no metadata extracted
+        # Without a closing delimiter, preserve the complete original document.
         assert metadata == {}
+        assert body == text
 
     def test_frontmatter_with_colons_in_value(self):
         text = '---\ntitle: "Key: Value"\n---\nBody.'
         metadata, body = parse_frontmatter(text)
         assert metadata["title"] == '"Key: Value"'
+        assert body == "Body."
 
     def test_frontmatter_preserves_whitespace_in_values(self):
         text = "---\ntitle:   Spaced Title  \n---\nBody."
         metadata, body = parse_frontmatter(text)
         assert metadata["title"] == "Spaced Title"
+        assert body == "Body."
+
+    def test_frontmatter_embedded_hyphens(self):
+        text = "---\ntitle: A---B\n---\n# Results\nBody."
+        metadata, body = parse_frontmatter(text)
+        assert metadata["title"] == "A---B"
+        assert body == "# Results\nBody."
+
+    def test_non_line_opener_four_hyphens(self):
+        text = "----\ntitle: Test\n----\nBody."
+        metadata, body = parse_frontmatter(text)
+        assert metadata == {}
+        assert body == "----\ntitle: Test\n----\nBody."
+
+    def test_non_line_opener_text_suffix(self):
+        text = "---text\ntitle: Test\n---\nBody."
+        metadata, body = parse_frontmatter(text)
+        assert metadata == {}
+        assert body == "---text\ntitle: Test\n---\nBody."
+
+    def test_opening_delimiter_must_be_exact_first_line(self):
+        for opening in (" ---", "--- ", "\t---"):
+            text = f"{opening}\ntitle: Ordinary text\n---\nBody."
+            metadata, body = parse_frontmatter(text)
+            assert metadata == {}, opening
+            assert body == text, opening
+
+    def test_closing_delimiter_trimmed(self):
+        text = "---\ntitle: Test\n  ---  \nBody."
+        metadata, body = parse_frontmatter(text)
+        assert metadata["title"] == "Test"
+        assert body == "Body."
 
 
 class TestParseMarkdown:
