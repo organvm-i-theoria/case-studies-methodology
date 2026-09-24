@@ -45,18 +45,19 @@ class CaseStudy:
 def parse_frontmatter(text: str) -> tuple[dict[str, str], str]:
     """Extract YAML-like frontmatter from markdown text."""
     metadata: dict[str, str] = {}
-    body = text
+    lines = text.splitlines()
 
-    if text.startswith("---"):
-        parts = text.split("---", 2)
-        if len(parts) >= 3:
-            for line in parts[1].strip().splitlines():
-                if ":" in line:
-                    key, _, value = line.partition(":")
-                    metadata[key.strip()] = value.strip()
-            body = parts[2].strip()
+    if lines and lines[0].strip() == "---":
+        for i in range(1, len(lines)):
+            if lines[i].strip() == "---":
+                for line in lines[1:i]:
+                    if ":" in line:
+                        key, _, value = line.partition(":")
+                        metadata[key.strip()] = value.strip()
+                body = "\n".join(lines[i + 1:]).strip()
+                return metadata, body
 
-    return metadata, body
+    return {}, text
 
 
 def parse_markdown(text: str) -> CaseStudy:

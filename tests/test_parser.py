@@ -40,6 +40,30 @@ class TestParseFrontmatter:
         metadata, body = parse_frontmatter(text)
         assert metadata["title"] == "Spaced Title"
 
+    def test_frontmatter_embedded_hyphens(self):
+        text = "---\ntitle: A---B\n---\n# Results\nBody."
+        metadata, body = parse_frontmatter(text)
+        assert metadata["title"] == "A---B"
+        assert body == "# Results\nBody."
+
+    def test_non_line_opener_four_hyphens(self):
+        text = "----\ntitle: Test\n----\nBody."
+        metadata, body = parse_frontmatter(text)
+        assert metadata == {}
+        assert body == "----\ntitle: Test\n----\nBody."
+
+    def test_non_line_opener_text_suffix(self):
+        text = "---text\ntitle: Test\n---\nBody."
+        metadata, body = parse_frontmatter(text)
+        assert metadata == {}
+        assert body == "---text\ntitle: Test\n---\nBody."
+
+    def test_closing_delimiter_trimmed(self):
+        text = "---\ntitle: Test\n  ---  \nBody."
+        metadata, body = parse_frontmatter(text)
+        assert metadata["title"] == "Test"
+        assert body == "Body."
+
 
 class TestParseMarkdown:
     def test_basic_parsing(self):
